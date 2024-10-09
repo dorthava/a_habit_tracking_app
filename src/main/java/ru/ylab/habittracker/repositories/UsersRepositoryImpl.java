@@ -4,6 +4,7 @@ import ru.ylab.habittracker.models.User;
 import ru.ylab.habittracker.utils.IdsGenerator;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 public class UsersRepositoryImpl implements UsersRepository {
@@ -19,14 +20,34 @@ public class UsersRepositoryImpl implements UsersRepository {
     }
 
     @Override
-    public void save(User entity) {
-        if (findByEmail(entity.getEmail()).isPresent()) {
-            System.out.println("User already exists");
-            return;
-        }
+    public boolean existsByEmail(String email) {
+        return dataSource.containsKey(email);
+    }
 
-        entity.setId(IdsGenerator.getInstance().generateId());
+    @Override
+    public List<User> findAll() {
+        return dataSource.values().stream().toList();
+    }
+
+    @Override
+    public User save(User entity) {
+        Long generatedId = IdsGenerator.getInstance().generateId();
+        entity.setId(generatedId);
         dataSource.put(entity.getEmail(), entity);
-        System.out.println("Saved user: " + entity);
+        return entity;
+    }
+
+    @Override
+    public User update(User entity) {
+        User user = dataSource.get(entity.getEmail());
+        user.setName(entity.getName());
+        user.setEmail(entity.getEmail());
+        user.setPassword(entity.getPassword());
+        return user;
+    }
+
+    @Override
+    public void delete(String email) {
+        dataSource.remove(email);
     }
 }

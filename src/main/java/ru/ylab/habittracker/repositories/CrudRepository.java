@@ -1,5 +1,16 @@
 package ru.ylab.habittracker.repositories;
 
+import ru.ylab.habittracker.models.User;
+
+import java.util.List;
+
 public interface CrudRepository<T> {
-    void save(T entity);
+
+    List<T> findAll();
+
+    T save(T entity);
+
+    T update(T entity);
+
+    void delete(String email);
 }
