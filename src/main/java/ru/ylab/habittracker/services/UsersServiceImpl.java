@@ -19,13 +19,13 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public BaseResponse update(User user) {
+    public BaseResponse<User> update(User user) {
         Optional<User> optionalUser = usersRepository.findByEmail(user.getEmail());
         if(optionalUser.isEmpty()) {
-            return new BaseResponse(false, "User not found");
+            return new BaseResponse<>(false, "User not found", null);
         }
-        usersRepository.save(user);
-        return new BaseResponse(true, "User updated");
+        user = usersRepository.save(user);
+        return new BaseResponse<>(true, "User updated", user);
     }
 
     @Override
@@ -34,13 +34,13 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public BaseResponse updatePasswordByEmail(String email, String newPassword) {
+    public BaseResponse<User> updatePasswordByEmail(String email, String newPassword) {
         Optional<User> optionalUser = usersRepository.findByEmail(email);
         if(optionalUser.isEmpty()) {
-            return new BaseResponse(false, "User not found");
+            return new BaseResponse<>(false, "User not found", null);
         }
         User user = optionalUser.get();
         user.setPassword(newPassword);
-        return new BaseResponse(true, "Password updated");
+        return new BaseResponse<>(true, "Password updated", user);
     }
 }

@@ -22,13 +22,14 @@ public class Main {
 
     public Main() {
         HashMap<String, User> dataSource = new HashMap<>();
-        UsersRepository usersRepository = new UsersRepositoryImpl(dataSource);
+        UsersRepository usersRepository = new UsersRepositoryImpl();
         UsersService usersService = new UsersServiceImpl(usersRepository);
         AuthenticationService authenticationService = new AuthenticationService(usersService, usersRepository);
 
         usersController = new UsersController(usersService);
         authenticationController = new AuthenticationController(authenticationService);
     }
+
     public static void main(String[] args) {
         Main main = new Main();
         Scanner scanner = new Scanner(System.in);

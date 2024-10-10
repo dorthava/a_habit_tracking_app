@@ -24,8 +24,8 @@ public class AuthenticationService {
         }
         User user = new User(null, signUpRequest.getName(),
                 signUpRequest.getEmail(), signUpRequest.getPassword());
-        usersService.create(user);
-        return new SignUpResponse(true, "Registration successful!", user.getId());
+        user = usersService.create(user);
+        return new SignUpResponse(true, "Registration successful!", user.getEmail());
     }
 
     public SignInResponse signIn(SignInRequest signInRequest) {
@@ -37,6 +37,6 @@ public class AuthenticationService {
         if (!user.getPassword().equals(signInRequest.getPassword())) {
             return new SignInResponse(false, "Wrong password.", null);
         }
-        return new SignInResponse(true, "Login successful!", userOptional.get().getId());
+        return new SignInResponse(true, "Login successful!", userOptional.get().getEmail());
     }
 }
