@@ -1,6 +1,11 @@
 package ru.ylab.habittracker.services;
 
+import ru.ylab.habittracker.dto.BaseResponse;
+import ru.ylab.habittracker.models.User;
+
 public interface UsersService {
-    void signUp(String email, String password);
-    void signIn(String email, String password);
+    User create(User user);
+    BaseResponse update(User user);
+    void delete(String email);
+    BaseResponse updatePasswordByEmail(String email, String newPassword);
 }

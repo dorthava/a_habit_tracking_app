@@ -1,5 +1,7 @@
 package ru.ylab.habittracker.controllers;
 
+import ru.ylab.habittracker.dto.BaseResponse;
+import ru.ylab.habittracker.models.User;
 import ru.ylab.habittracker.services.UsersService;
 
 public class UsersController {
@@ -9,11 +11,15 @@ public class UsersController {
         this.usersService = usersService;
     }
 
-    public void signIn(String username, String password) {
-        usersService.signIn(username, password);
+    public BaseResponse updatingTheUserProfile(User user) {
+        return usersService.update(user);
     }
 
-    public void signUp(String username, String password) {
-        usersService.signUp(username, password);
+    public void deleteUserByEmail(String email) {
+        usersService.delete(email);
+    }
+
+    public BaseResponse forgotPassword(String email, String password) {
+        return usersService.updatePasswordByEmail(email, password);
     }
 }
