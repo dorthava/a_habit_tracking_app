@@ -3,12 +3,12 @@ package ru.ylab.habittracker.dto;
 public class SignInResponse {
     private boolean success;
     private String message;
-    private Long id;
+    private String email;
 
-    public SignInResponse(boolean success, String message, Long id) {
+    public SignInResponse(boolean success, String message, String email) {
         this.success = success;
         this.message = message;
-        this.id = id;
+        this.email = email;
     }
 
     public boolean isSuccess() {
@@ -27,12 +27,12 @@ public class SignInResponse {
         this.message = message;
     }
 
-    public Long getId() {
-        return id;
+    public String getEmail() {
+        return email;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class SignInResponse {
         return "SignInResponse{" +
                 "success=" + success +
                 ", message='" + message + '\'' +
-                ", id=" + id +
+                ", email='" + email + '\'' +
                 '}';
     }
 }

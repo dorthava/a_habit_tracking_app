@@ -11,7 +11,7 @@ public class UsersController {
         this.usersService = usersService;
     }
 
-    public BaseResponse updatingTheUserProfile(User user) {
+    public BaseResponse<User> updatingTheUserProfile(User user) {
         return usersService.update(user);
     }
 
@@ -19,7 +19,7 @@ public class UsersController {
         usersService.delete(email);
     }
 
-    public BaseResponse forgotPassword(String email, String password) {
+    public BaseResponse<User> forgotPassword(String email, String password) {
         return usersService.updatePasswordByEmail(email, password);
     }
 }

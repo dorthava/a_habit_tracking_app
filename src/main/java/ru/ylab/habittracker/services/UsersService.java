@@ -5,7 +5,7 @@ import ru.ylab.habittracker.models.User;
 
 public interface UsersService {
     User create(User user);
-    BaseResponse update(User user);
+    BaseResponse<User> update(User user);
     void delete(String email);
-    BaseResponse updatePasswordByEmail(String email, String newPassword);
+    BaseResponse<User> updatePasswordByEmail(String email, String newPassword);
 }

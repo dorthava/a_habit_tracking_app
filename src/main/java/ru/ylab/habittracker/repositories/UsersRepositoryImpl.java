@@ -2,6 +2,7 @@ package ru.ylab.habittracker.repositories;
 
 import ru.ylab.habittracker.models.User;
 import ru.ylab.habittracker.utils.IdsGenerator;
+import ru.ylab.habittracker.utils.StringValidator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,8 +11,8 @@ import java.util.Optional;
 public class UsersRepositoryImpl implements UsersRepository {
     private final HashMap<String, User> dataSource;
 
-    public UsersRepositoryImpl(HashMap<String, User> dataSource) {
-        this.dataSource = dataSource;
+    public UsersRepositoryImpl() {
+        this.dataSource = new HashMap<>();
     }
 
     @Override
@@ -40,9 +41,15 @@ public class UsersRepositoryImpl implements UsersRepository {
     @Override
     public User update(User entity) {
         User user = dataSource.get(entity.getEmail());
-        user.setName(entity.getName());
-        user.setEmail(entity.getEmail());
-        user.setPassword(entity.getPassword());
+        if (StringValidator.isValidString(entity.getName())) {
+            user.setName(entity.getName());
+        }
+        if (StringValidator.isValidString(entity.getEmail())) {
+            user.setEmail(entity.getEmail());
+        }
+        if (StringValidator.isValidString(entity.getPassword())) {
+            user.setPassword(entity.getPassword());
+        }
         return user;
     }
 
