@@ -3,6 +3,7 @@ package ru.ylab.habittracker.models;
 import ru.ylab.habittracker.utils.Frequency;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Objects;
 
 public class Habit {
@@ -12,6 +13,7 @@ public class Habit {
     private Frequency frequency;
     private String createdBy;
     private LocalDate createdDate;
+    private final HashSet<LocalDate> completionHistory;
 
     public Habit(Long id, String name, String description, Frequency frequency, String createdBy) {
         this.id = id;
@@ -20,6 +22,7 @@ public class Habit {
         this.frequency = frequency;
         this.createdBy = createdBy;
         this.createdDate = LocalDate.now();
+        this.completionHistory = new HashSet<>();
     }
 
     public Long getId() {
@@ -70,13 +73,18 @@ public class Habit {
         this.createdDate = createdDate;
     }
 
+    public HashSet<LocalDate> getCompletionHistory() {
+        return completionHistory;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Habit habit = (Habit) o;
         return Objects.equals(id, habit.id) && Objects.equals(name, habit.name) && Objects.equals(description, habit.description)
-                && frequency == habit.frequency && Objects.equals(createdBy, habit.createdBy) && Objects.equals(createdDate, habit.createdDate);
+                && frequency == habit.frequency && Objects.equals(createdBy, habit.createdBy)
+                && Objects.equals(createdDate, habit.createdDate);
     }
 
     @Override
