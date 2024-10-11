@@ -1,6 +1,7 @@
 package ru.ylab.habittracker.controllers;
 
 import ru.ylab.habittracker.dto.BaseResponse;
+import ru.ylab.habittracker.models.DayStatistic;
 import ru.ylab.habittracker.models.Habit;
 import ru.ylab.habittracker.services.HabitsService;
 
@@ -32,5 +33,17 @@ public class HabitsController {
 
     public BaseResponse<List<Habit>> findAllUserHabitsByEmailAndDate(String email, LocalDate date) {
         return habitsService.findByEmailAndDate(email, date);
+    }
+
+    public void markCompletion(Long id) {
+        habitsService.markCompletion(id);
+    }
+
+    public BaseResponse<List<LocalDate>> showTheHistory(Long id) {
+        return habitsService.showTheHistory(id);
+    }
+
+    public BaseResponse<List<DayStatistic>> getStatistics(Long id, String period) {
+        return habitsService.getCompletion(id, period);
     }
 }
