@@ -9,6 +9,7 @@ import ru.ylab.habittracker.repositories.HabitsRepositoryImpl;
 import ru.ylab.habittracker.repositories.UsersRepository;
 import ru.ylab.habittracker.repositories.UsersRepositoryImpl;
 import ru.ylab.habittracker.services.UsersServiceImpl;
+import ru.ylab.habittracker.utils.Role;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,5 +85,55 @@ public class UsersServiceImplTest {
         assertFalse(response.success());
         assertEquals("User not found", response.message());
         assertNull(response.data());
+    }
+
+    @Test
+    void testBlockUserAsAdmin() {
+        usersRepository.save(new User(null, "John", "test@example.com", "password"));
+        BaseResponse<Void> response = usersService.blockUser(Role.ADMIN, "test@example.com");
+        assertTrue(response.success());
+        assertEquals("User blocked", response.message());
+
+        User blockedUser = usersRepository.findByEmail("test@example.com").get();
+        assertTrue(blockedUser.isBlocked());
+    }
+
+    @Test
+    void testBlockUserAsRegularUser() {
+        BaseResponse<Void> response = usersService.blockUser(Role.USER, "test@example.com");
+        assertFalse(response.success());
+        assertEquals("Forbidden", response.message());
+    }
+
+    @Test
+    void testBlockUserNotFound() {
+        BaseResponse<Void> response = usersService.blockUser(Role.ADMIN, "notfound@example.com");
+        assertFalse(response.success());
+        assertEquals("User not found", response.message());
+    }
+
+    @Test
+    void testDeleteUserAsAdmin() {
+        BaseResponse<Void> response = usersService.deleteUser(Role.ADMIN, "test@example.com");
+        assertTrue(response.success());
+        assertEquals("User deleted", response.message());
+
+        assertFalse(usersRepository.findByEmail("test@example.com").isPresent());
+    }
+
+    @Test
+    void testDeleteUserAsRegularUser() {
+        BaseResponse<Void> response = usersService.deleteUser(Role.USER, "test@example.com");
+        assertFalse(response.success());
+        assertEquals("Forbidden", response.message());
+    }
+
+    @Test
+    void testSetAdminRole() {
+        usersRepository.save(new User(null, "John", "test@example.com", "password"));
+        usersService.setAdminRole("test@example.com");
+
+        User user = usersRepository.findByEmail("test@example.com").get();
+        assertEquals(Role.ADMIN, user.getRole());
     }
 }
