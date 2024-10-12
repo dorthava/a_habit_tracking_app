@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface HabitsRepository extends CrudRepository<Habit> {
     Optional<Habit> findById(Long id);
-    void deleteById(Long id);
+    void delete(String email);
 }

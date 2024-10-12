@@ -51,7 +51,7 @@ public class HabitsRepositoryImpl implements HabitsRepository {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void delete(Long id) {
         dataSource.remove(id);
     }
 }

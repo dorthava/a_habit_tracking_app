@@ -2,15 +2,18 @@ package ru.ylab.habittracker.services;
 
 import ru.ylab.habittracker.dto.BaseResponse;
 import ru.ylab.habittracker.models.User;
+import ru.ylab.habittracker.repositories.HabitsRepository;
 import ru.ylab.habittracker.repositories.UsersRepository;
 
 import java.util.Optional;
 
 public class UsersServiceImpl implements UsersService {
     private final UsersRepository usersRepository;
+    private final HabitsRepository habitsRepository;
 
-    public UsersServiceImpl(UsersRepository usersRepository) {
+    public UsersServiceImpl(UsersRepository usersRepository, HabitsRepository habitsRepository) {
         this.usersRepository = usersRepository;
+        this.habitsRepository = habitsRepository;
     }
 
     @Override
@@ -31,6 +34,7 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public void delete(String email) {
         usersRepository.delete(email);
+        habitsRepository.delete(email);
     }
 
     @Override

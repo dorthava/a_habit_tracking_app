@@ -12,5 +12,5 @@ public interface CrudRepository<T> {
 
     T update(T entity);
 
-    void delete(String email);
+    void delete(Long id);
 }

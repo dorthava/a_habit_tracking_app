@@ -54,6 +54,14 @@ public class UsersRepositoryImpl implements UsersRepository {
     }
 
     @Override
+    public void delete(Long id) {
+        List<User> users = dataSource.values().stream().filter(user -> user.getId().equals(id)).toList();
+        if(!users.isEmpty()) {
+            dataSource.remove(users.get(0).getEmail());
+        }
+    }
+
+    @Override
     public void delete(String email) {
         dataSource.remove(email);
     }

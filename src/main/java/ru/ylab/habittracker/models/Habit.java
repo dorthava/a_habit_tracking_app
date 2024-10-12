@@ -3,7 +3,8 @@ package ru.ylab.habittracker.models;
 import ru.ylab.habittracker.utils.Frequency;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Habit {
@@ -13,7 +14,7 @@ public class Habit {
     private Frequency frequency;
     private String createdBy;
     private LocalDate createdDate;
-    private final HashSet<LocalDate> completionHistory;
+    private List<HabitCompletion> completions;
 
     public Habit(Long id, String name, String description, Frequency frequency, String createdBy) {
         this.id = id;
@@ -22,7 +23,7 @@ public class Habit {
         this.frequency = frequency;
         this.createdBy = createdBy;
         this.createdDate = LocalDate.now();
-        this.completionHistory = new HashSet<>();
+        completions = new ArrayList<>();
     }
 
     public Long getId() {
@@ -73,8 +74,8 @@ public class Habit {
         this.createdDate = createdDate;
     }
 
-    public HashSet<LocalDate> getCompletionHistory() {
-        return completionHistory;
+    public List<HabitCompletion> getCompletions() {
+        return completions;
     }
 
     @Override
@@ -84,12 +85,13 @@ public class Habit {
         Habit habit = (Habit) o;
         return Objects.equals(id, habit.id) && Objects.equals(name, habit.name) && Objects.equals(description, habit.description)
                 && frequency == habit.frequency && Objects.equals(createdBy, habit.createdBy)
-                && Objects.equals(createdDate, habit.createdDate);
+                && Objects.equals(createdDate, habit.createdDate)
+                && Objects.equals(completions, habit.completions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, frequency, createdBy, createdDate);
+        return Objects.hash(id, name, description, frequency, createdBy, createdDate, completions);
     }
 
     @Override
@@ -101,6 +103,7 @@ public class Habit {
                 ", frequency=" + frequency +
                 ", createdBy='" + createdBy + '\'' +
                 ", createdDate=" + createdDate +
+                ", completions=" + completions +
                 '}';
     }
 }
