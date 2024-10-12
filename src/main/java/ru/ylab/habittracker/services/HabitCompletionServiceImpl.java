@@ -188,7 +188,7 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
         }
 
         BaseResponse<Double> completionPercentage = calculateCompletionPercentage(id, periodStart, periodEnd);
-        BaseResponse<Integer> currentStreak = calculateCurrentStreak(id, periodStart);
+        BaseResponse<Integer> currentStreak = calculateCurrentStreak(id, LocalDate.now());
         Optional<Habit> optionalHabit = habitsRepository.findById(id);
         long countDaysInPeriod = calculateCountDaysInPeriod(habitCompletionList, periodStart, periodEnd);
         HabitReportResponse habitReportResponse = new HabitReportResponse(optionalHabit.get().getName(), currentStreak.data(),
