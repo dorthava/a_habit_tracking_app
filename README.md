@@ -10,5 +10,6 @@ mvn clean test
 
 
 https://github.com/dorthava/a_habit_tracking_app/pull/5
+https://github.com/dorthava/a_habit_tracking_app/pull/6
 
-![img.png](screens%2Fimg.png)
+![img.png](screens/img.png)
