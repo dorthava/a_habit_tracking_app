@@ -9,7 +9,7 @@ public interface UsersService {
     BaseResponse<User> update(User user);
     void delete(String email);
     BaseResponse<User> updatePasswordByEmail(String email, String newPassword);
-    BaseResponse<Void> blockUser(Role role, String email);
-    BaseResponse<Void> deleteUser(Role role, String email);
+    BaseResponse<Void> blockUser(String adminEmail, String email);
+    BaseResponse<Void> deleteUser(String adminEmail, String email);
     void setAdminRole(String email);
 }

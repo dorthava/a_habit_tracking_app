@@ -89,8 +89,12 @@ public class UsersServiceImplTest {
 
     @Test
     void testBlockUserAsAdmin() {
+        usersRepository.save(new User(null, "John", "admin@example.com", "password"));
+        usersService.setAdminRole("admin@example.com");
+
         usersRepository.save(new User(null, "John", "test@example.com", "password"));
-        BaseResponse<Void> response = usersService.blockUser(Role.ADMIN, "test@example.com");
+
+        BaseResponse<Void> response = usersService.blockUser("admin@example.com", "test@example.com");
         assertTrue(response.success());
         assertEquals("User blocked", response.message());
 
@@ -100,21 +104,23 @@ public class UsersServiceImplTest {
 
     @Test
     void testBlockUserAsRegularUser() {
-        BaseResponse<Void> response = usersService.blockUser(Role.USER, "test@example.com");
+        BaseResponse<Void> response = usersService.blockUser("adik@gmail.com", "test@example.com");
         assertFalse(response.success());
-        assertEquals("Forbidden", response.message());
+        assertEquals("Admin not found", response.message());
     }
 
     @Test
     void testBlockUserNotFound() {
-        BaseResponse<Void> response = usersService.blockUser(Role.ADMIN, "notfound@example.com");
+        BaseResponse<Void> response = usersService.blockUser("admin@gmail.com", "notfound@example.com");
         assertFalse(response.success());
-        assertEquals("User not found", response.message());
+        assertEquals("Admin not found", response.message());
     }
 
     @Test
     void testDeleteUserAsAdmin() {
-        BaseResponse<Void> response = usersService.deleteUser(Role.ADMIN, "test@example.com");
+        usersRepository.save(new User(null, "John", "admin@example.com", "password"));
+        usersService.setAdminRole("admin@example.com");
+        BaseResponse<Void> response = usersService.deleteUser("admin@example.com", "test@example.com");
         assertTrue(response.success());
         assertEquals("User deleted", response.message());
 
@@ -123,9 +129,9 @@ public class UsersServiceImplTest {
 
     @Test
     void testDeleteUserAsRegularUser() {
-        BaseResponse<Void> response = usersService.deleteUser(Role.USER, "test@example.com");
+        BaseResponse<Void> response = usersService.deleteUser("adik@gmail.com", "test@example.com");
         assertFalse(response.success());
-        assertEquals("Forbidden", response.message());
+        assertEquals("Admin not found", response.message());
     }
 
     @Test

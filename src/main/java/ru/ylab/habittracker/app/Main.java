@@ -41,10 +41,7 @@ public class Main {
         main.createAdmin(main);
 
         while (true) {
-            System.out.println("1. Register");
-            System.out.println("2. Login");
-            System.out.println("3. Exit");
-            System.out.print("Choose an option: ");
+            System.out.print("1. Register\n2. Login\n3. Exit\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -102,7 +99,7 @@ public class Main {
 
     private void workingInsideAnAccount(Main main, Scanner scanner, String email) {
         while (true) {
-            System.out.println("1. Управление пользователями\n2. Управление привычками\nЛюбая другая кнопка - выйти из аккаунта\nChoose an option: ");
+            System.out.println("1. Управление пользователями\n2. Управление привычками\n3. Заблокировать пользователя(Для администратора)\nЛюбая другая кнопка - выйти из аккаунта\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -113,6 +110,11 @@ public class Main {
                     break;
                 case 2:
                     managingHabits(main, scanner, email);
+                    break;
+                case 3:
+                    System.out.println("Введи email, который стоит заблокировать: ");
+                    String emailBlock = scanner.nextLine();
+                    System.out.println(main.administrationController.blockUser("admin@gmail.com", emailBlock));
                     break;
                 default:
                     return;

@@ -50,8 +50,13 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public BaseResponse<Void> blockUser(Role role, String email) {
-        if(role == Role.USER) {
+    public BaseResponse<Void> blockUser(String adminEmail, String email) {
+        Optional<User> optionalAdmin = usersRepository.findByEmail(adminEmail);
+        if(optionalAdmin.isEmpty()) {
+            return new BaseResponse<>(false, "Admin not found", null);
+        }
+
+        if(optionalAdmin.get().getRole() == Role.USER) {
             return new BaseResponse<>(false, "Forbidden", null);
         }
 
@@ -66,8 +71,13 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public BaseResponse<Void> deleteUser(Role role, String email) {
-        if(role == Role.USER) {
+    public BaseResponse<Void> deleteUser(String adminEmail, String email) {
+        Optional<User> optionalAdmin = usersRepository.findByEmail(adminEmail);
+        if(optionalAdmin.isEmpty()) {
+            return new BaseResponse<>(false, "Admin not found", null);
+        }
+
+        if(optionalAdmin.get().getRole() == Role.USER) {
             return new BaseResponse<>(false, "Forbidden", null);
         }
         usersRepository.delete(email);
