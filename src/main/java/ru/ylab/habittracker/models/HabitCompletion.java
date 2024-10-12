@@ -47,22 +47,6 @@ public class HabitCompletion {
         this.completed = completed;
     }
 
-    public Long getHabitId() {
-        return habitId;
-    }
-
-    public void setHabitId(Long habitId) {
-        this.habitId = habitId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        HabitCompletion that = (HabitCompletion) o;
-        return completed == that.completed && Objects.equals(id, that.id) && Objects.equals(completionDate, that.completionDate) && Objects.equals(habitId, that.habitId);
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(id, completionDate, completed, habitId);

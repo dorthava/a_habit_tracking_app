@@ -2,7 +2,7 @@ package ru.ylab.habittracker.dto;
 
 public class SignInRequest {
     private String email;
-    private String password;
+    private final String password;
 
     public SignInRequest(String email, String password) {
         this.email = email;
@@ -19,9 +19,5 @@ public class SignInRequest {
 
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

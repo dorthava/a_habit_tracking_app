@@ -1,9 +1,9 @@
 package ru.ylab.habittracker.dto;
 
 public class SignUpRequest {
-    private String name;
+    private final String name;
     private String email;
-    private String password;
+    private final String password;
 
     public SignUpRequest(String name, String email, String password) {
         this.name = name;
@@ -13,10 +13,6 @@ public class SignUpRequest {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getEmail() {
@@ -29,9 +25,5 @@ public class SignUpRequest {
 
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

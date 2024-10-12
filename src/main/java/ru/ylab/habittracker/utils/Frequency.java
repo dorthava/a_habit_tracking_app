@@ -10,8 +10,13 @@ public enum Frequency {
         this.label = label;
     }
 
-    public String getLabel() {
-        return label;
+    public static Frequency fromString(String label) {
+        for (Frequency frequency : Frequency.values()) {
+            if (frequency.label.equalsIgnoreCase(label)) {
+                return frequency;
+            }
+        }
+        throw new IllegalArgumentException("Unknown frequency: " + label);
     }
 
     @Override

@@ -32,11 +32,11 @@ public class HabitCompletionController {
         return habitCompletionService.calculateCurrentStreak(id, currentDate);
     }
 
-    BaseResponse<Double> calculateCompletionPercentage(Long id, LocalDate periodStart, LocalDate periodEnd) {
+    public BaseResponse<Double> calculateCompletionPercentage(Long id, LocalDate periodStart, LocalDate periodEnd) {
         return habitCompletionService.calculateCompletionPercentage(id, periodStart, periodEnd);
     }
 
-    BaseResponse<HabitReportResponse> generateHabitReport(Long id, LocalDate periodStart, LocalDate periodEnd) {
+    public BaseResponse<HabitReportResponse> generateHabitReport(Long id, LocalDate periodStart, LocalDate periodEnd) {
         return habitCompletionService.generateHabitReport(id, periodStart, periodEnd);
     }
 }

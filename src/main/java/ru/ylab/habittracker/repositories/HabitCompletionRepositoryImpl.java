@@ -23,7 +23,8 @@ public class HabitCompletionRepositoryImpl implements HabitCompletionRepository 
     public HabitCompletion save(HabitCompletion entity) {
         Long id = IdsGenerator.getInstance().generateId();
         entity.setId(id);
-        return dataSource.put(id, entity);
+        dataSource.put(id, entity);
+        return entity;
     }
 
     @Override

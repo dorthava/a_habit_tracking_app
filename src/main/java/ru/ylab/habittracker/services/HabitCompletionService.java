@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface HabitCompletionService {
-    void markCompletion(Long id);
+    HabitCompletion markCompletion(Long id);
 
     BaseResponse<List<HabitCompletion>> showTheHistory(Long id);
 

@@ -1,8 +1,8 @@
 package ru.ylab.habittracker.dto;
 
 public class SignUpResponse {
-    private boolean success;
-    private String message;
+    private final boolean success;
+    private final String message;
     private String email;
 
     public SignUpResponse(boolean success, String message, String email) {
@@ -15,16 +15,8 @@ public class SignUpResponse {
         return success;
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
     public String getMessage() {
         return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public String getEmail() {

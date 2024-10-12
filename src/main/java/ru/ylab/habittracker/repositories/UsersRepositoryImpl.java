@@ -44,9 +44,6 @@ public class UsersRepositoryImpl implements UsersRepository {
         if (StringValidator.isValidString(entity.getName())) {
             user.setName(entity.getName());
         }
-        if (StringValidator.isValidString(entity.getEmail())) {
-            user.setEmail(entity.getEmail());
-        }
         if (StringValidator.isValidString(entity.getPassword())) {
             user.setPassword(entity.getPassword());
         }
@@ -56,7 +53,7 @@ public class UsersRepositoryImpl implements UsersRepository {
     @Override
     public void delete(Long id) {
         List<User> users = dataSource.values().stream().filter(user -> user.getId().equals(id)).toList();
-        if(!users.isEmpty()) {
+        if (!users.isEmpty()) {
             dataSource.remove(users.get(0).getEmail());
         }
     }

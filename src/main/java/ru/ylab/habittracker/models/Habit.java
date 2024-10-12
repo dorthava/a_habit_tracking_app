@@ -11,10 +11,10 @@ public class Habit {
     private Long id;
     private String name;
     private String description;
-    private Frequency frequency;
-    private String createdBy;
+    private final Frequency frequency;
+    private final String createdBy;
     private LocalDate createdDate;
-    private List<HabitCompletion> completions;
+    private final List<HabitCompletion> completions;
 
     public Habit(Long id, String name, String description, Frequency frequency, String createdBy) {
         this.id = id;
@@ -50,20 +50,8 @@ public class Habit {
         this.description = description;
     }
 
-    public Frequency getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(Frequency frequency) {
-        this.frequency = frequency;
-    }
-
     public String getCreatedBy() {
         return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
     }
 
     public LocalDate getCreatedDate() {

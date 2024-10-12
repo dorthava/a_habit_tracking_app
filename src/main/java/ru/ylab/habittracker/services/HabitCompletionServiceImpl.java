@@ -25,15 +25,28 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
     }
 
     @Override
-    public void markCompletion(Long id) {
-        habitsRepository.findById(id).ifPresent(habit -> {
-            HabitCompletion habitCompletion = new HabitCompletion(LocalDate.now(), true, id);
-            habitCompletion = habitCompletionRepository.save(habitCompletion);
-            List<HabitCompletion> habitCompletionList = habit.getCompletions();
-            if (habitCompletionList.isEmpty() || !habitCompletion.equals(habitCompletionList.get(habitCompletionList.size() - 1))) {
-                habit.getCompletions().add(habitCompletion);
-            }
-        });
+    public HabitCompletion markCompletion(Long id) {
+        Optional<Habit> optionalHabit = habitsRepository.findById(id);
+        if (optionalHabit.isEmpty()) {
+            return null;
+        }
+
+        Habit habit = optionalHabit.get();
+        LocalDate today = LocalDate.now();
+
+        List<HabitCompletion> habitCompletionList = habit.getCompletions();
+        boolean alreadyCompleted = habitCompletionList.stream()
+                .anyMatch(completion -> completion.getCompletionDate().equals(today));
+
+        if (alreadyCompleted) {
+            return null;
+        }
+
+        HabitCompletion habitCompletion = new HabitCompletion(today, true, id);
+        habitCompletionRepository.save(habitCompletion);
+        habitCompletionList.add(habitCompletion);
+
+        return habitCompletion;
     }
 
     @Override
@@ -50,10 +63,10 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
     @Override
     public BaseResponse<List<HabitCompletion>> getCompletion(Long id, String period) {
         BaseResponse<List<HabitCompletion>> baseResponseShowTheHistory = showTheHistory(id);
-        if (!baseResponseShowTheHistory.isSuccess()) {
-            return new BaseResponse<>(false, baseResponseShowTheHistory.getMessage(), null);
+        if (!baseResponseShowTheHistory.success()) {
+            return new BaseResponse<>(false, baseResponseShowTheHistory.message(), null);
         }
-        List<HabitCompletion> habitHistory = baseResponseShowTheHistory.getData();
+        List<HabitCompletion> habitHistory = baseResponseShowTheHistory.data();
         LocalDate localDate = LocalDate.now();
         return switch (period) {
             case "month" -> getCompletionForMonth(id, habitHistory, localDate);
@@ -124,7 +137,6 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
             return new BaseResponse<>(false, "Habit completion list is empty.", null);
         }
         int result = 0;
-        currentDate = currentDate.minusDays(1);
         for (int i = habitCompletionList.size() - 1; i >= 0; --i) {
             HabitCompletion completion = habitCompletionList.get(i);
             if (completion.getCompletionDate().equals(currentDate)) {
@@ -147,6 +159,7 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
 
         long totalDaysInPeriod = calculateTotalDays(periodStart, periodEnd);
         long countDaysInPeriod = calculateCountDaysInPeriod(habitCompletionList, periodStart, periodEnd);
+        System.out.println();
         return new BaseResponse<>(true, "Found completion percentage.", (double) countDaysInPeriod / totalDaysInPeriod);
     }
 
@@ -159,7 +172,8 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
         long countDaysInPeriod = 0;
         for (HabitCompletion habitCompletion : habitCompletionList) {
             LocalDate completionDate = habitCompletion.getCompletionDate();
-            if (completionDate.isAfter(startDate) && completionDate.isBefore(endDate)) {
+            if ((completionDate.isEqual(startDate) || completionDate.isAfter(startDate)) &&
+                    (completionDate.isEqual(endDate) || completionDate.isBefore(endDate))) {
                 ++countDaysInPeriod;
             }
         }
@@ -177,8 +191,8 @@ public class HabitCompletionServiceImpl implements HabitCompletionService {
         BaseResponse<Integer> currentStreak = calculateCurrentStreak(id, periodStart);
         Optional<Habit> optionalHabit = habitsRepository.findById(id);
         long countDaysInPeriod = calculateCountDaysInPeriod(habitCompletionList, periodStart, periodEnd);
-        HabitReportResponse habitReportResponse = new HabitReportResponse(optionalHabit.get().getName(), currentStreak.getData(),
-                countDaysInPeriod, completionPercentage.getData());
+        HabitReportResponse habitReportResponse = new HabitReportResponse(optionalHabit.get().getName(), currentStreak.data(),
+                countDaysInPeriod, completionPercentage.data());
         return new BaseResponse<>(true, "Success!", habitReportResponse);
     }
 
