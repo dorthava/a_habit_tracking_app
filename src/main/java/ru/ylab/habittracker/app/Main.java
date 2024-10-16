@@ -40,45 +40,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         main.createAdmin(main);
 
-        while (true) {
-            System.out.print("1. Register\n2. Login\n3. Exit\nChoose an option:");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    System.out.println("Enter name: ");
-                    String name = scanner.nextLine();
-                    System.out.println("Enter email: ");
-                    String email = scanner.nextLine();
-                    System.out.println("Enter password: ");
-                    String password = scanner.nextLine();
-
-                    SignUpResponse signUpResponse = main.authenticationController.
-                            signUp(new SignUpRequest(name, email, password));
-                    System.out.println(signUpResponse.toString());
-
-                    break;
-                case 2:
-                    System.out.println("Enter email: ");
-                    String loginEmail = scanner.nextLine();
-                    System.out.println("Enter password: ");
-                    String loginPassword = scanner.nextLine();
-                    SignInResponse signInResponse = main.authenticationController.
-                            signIn(new SignInRequest(loginEmail, loginPassword));
-                    System.out.println(signInResponse.toString());
-                    if (signInResponse.isSuccess()) {
-                        main.workingInsideAnAccount(main, scanner, loginEmail);
-                    }
-                    break;
-                case 3:
-                    scanner.close();
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("Invalid option, please try again.");
-                    break;
-            }
-        }
+            main.showMenu(scanner);
     }
 
     public AuthenticationController getAuthenticationController() {
@@ -97,189 +59,217 @@ public class Main {
         return habitCompletionController;
     }
 
-    private void workingInsideAnAccount(Main main, Scanner scanner, String email) {
+    private void showMenu(Scanner scanner) {
         while (true) {
-            System.out.println("1. Управление пользователями\n2. Управление привычками\n3. Заблокировать пользователя(Для администратора)\nЛюбая другая кнопка - выйти из аккаунта\nChoose an option:");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    if (!userManagement(main, scanner, email)) {
-                        return;
-                    }
-                    break;
-                case 2:
-                    managingHabits(main, scanner, email);
-                    break;
-                case 3:
-                    System.out.println("Введи email, который стоит заблокировать: ");
-                    String emailBlock = scanner.nextLine();
-                    System.out.println(main.administrationController.blockUser("admin@gmail.com", emailBlock));
-                    break;
-                default:
+            switch (getOption(scanner, "1. Register\n2. Login\n3. Exit\nChoose an option:")) {
+                case 1 -> register(scanner);
+                case 2 -> login(scanner);
+                case 3 -> {
+                    scanner.close();
                     return;
+                }
+                default -> System.out.println("Invalid option, please try again.");
             }
         }
     }
 
-    private boolean userManagement(Main main, Scanner scanner, String email) {
+    private void register(Scanner scanner) {
+        SignUpResponse signUpResponse = authenticationController.signUp(new SignUpRequest(
+                prompt(scanner, "Enter name:"),
+                prompt(scanner, "Enter email:"),
+                prompt(scanner, "Enter password:")
+        ));
+        System.out.println(signUpResponse);
+    }
+
+    private void login(Scanner scanner) {
+        SignInResponse signInResponse = authenticationController.signIn(new SignInRequest(
+                prompt(scanner, "Enter email:"),
+                prompt(scanner, "Enter password:")
+        ));
+        System.out.println(signInResponse);
+        if (signInResponse.isSuccess()) {
+            userMenu(scanner, signInResponse.getEmail());
+        }
+    }
+
+    private void userMenu(Scanner scanner, String email) {
         while (true) {
-            System.out.println("1. Обновить пользовательские данные\n2. Обновить пароль\n3. Удалить аккаунт\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    System.out.println("Enter name: ");
-                    String name = scanner.nextLine();
-                    System.out.println("Enter password: ");
-                    String password = scanner.nextLine();
-                    System.out.println(usersController.updatingTheUserProfile(new User(null, name, email, password)));
-                    break;
-                case 2:
-                    System.out.println("Enter password: ");
-                    String forgotPassword = scanner.nextLine();
-                    System.out.println(usersController.forgotPassword(email, forgotPassword));
-                    break;
-                case 3:
-                    usersController.deleteUserByEmail(email);
-                    System.out.println("User deleted!");
+            switch (getOption(scanner, "1. Manage Users\n2. Manage Habits\n3. Block User (Admin)\n4. Return back\nAny other key - Logout\nChoose an option:")) {
+                case 1 -> {
+                    if(!manageUsers(scanner, email)) { return; }
+                }
+                case 2 -> manageHabits(scanner, email);
+                case 3 -> blockUser(scanner, email);
+                case 4 -> {
+                    return;
+                }
+                default -> System.out.println("Logged out.");
+            }
+        }
+    }
+
+    private boolean manageUsers(Scanner scanner, String email) {
+        while (true) {
+            switch (getOption(scanner, "1. Update Profile\n2. Change Password\n3. Delete Account\n4. Return back\nAny other key - Back\nChoose an option:")) {
+                case 1 -> updateUser(scanner, email);
+                case 2 -> changePassword(scanner, email);
+                case 3 -> {
+                    deleteUser(email);
                     return false;
-                default:
+                }
+                case 4 -> {
                     return true;
+                }
             }
         }
     }
 
-    private void managingHabits(Main main, Scanner scanner, String email) {
+    private void updateUser(Scanner scanner, String email) {
+        String name = prompt(scanner, "Enter name: ");
+        String password = prompt(scanner, "Enter password: ");
+        System.out.println(usersController.updatingTheUserProfile(new User(null, name, email, password)));
+    }
+
+    private void changePassword(Scanner scanner, String email) {
+        String newPassword = prompt(scanner, "Enter new password: ");
+        System.out.println(usersController.forgotPassword(email, newPassword));
+    }
+
+    private void deleteUser(String email) {
+        usersController.deleteUserByEmail(email);
+        System.out.println("User " + email + " has been deleted.");
+    }
+
+    private String prompt(Scanner scanner, String message) {
+        System.out.print(message);
+        return scanner.nextLine();
+    }
+
+    private int getOption(Scanner scanner, String menu) {
+        System.out.print(menu);
+        int result = scanner.nextInt();
+        scanner.nextLine();
+        return result;
+    }
+
+    private void manageHabits(Scanner scanner, String email) {
         while (true) {
-            System.out.println("1. Создание привычки\n2. Редактирование привычки\n3. Удаление привычки\n4. Просмотр всех привычек\n5. Просмотр всех привычек по дате создания\n6. Отслеживание выполнения привычки\n7. Статистика и аналитика\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    System.out.println("Enter habit name: ");
-                    String name = scanner.nextLine();
-                    System.out.println("Enter habit description: ");
-                    String description = scanner.nextLine();
-                    System.out.println("Enter habit frequency (daily/weekly):");
-                    Frequency frequency;
-                    try {
-                        frequency = Frequency.fromString(scanner.nextLine());
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid frequency");
-                        continue;
-                    }
-                    System.out.println(main.habitsController.create(new Habit(null, name, description, frequency, email)));
-                    break;
-                case 2:
-                    System.out.println("Enter habit id: ");
-                    Long updateId = scanner.nextLong();
-                    scanner.nextLine();
-                    System.out.println("Enter habit name: ");
-                    String updateName = scanner.nextLine();
-                    System.out.println("Enter habit description: ");
-                    String updateDescription = scanner.nextLine();
-                    System.out.println(main.habitsController.update(new Habit(updateId, updateName, updateDescription, null, email)));
-                    break;
-                case 3:
-                    System.out.println("Enter habit id: ");
-                    Long id = scanner.nextLong();
-                    habitsController.delete(id);
-                    break;
-                case 4:
-                    System.out.println(habitsController.findAllUserHabitsByEmail(email));
-                    break;
-                case 5:
-                    System.out.println("Введи данные в формате: \"yyyy-MM-dd\"");
-                    try {
-                        LocalDate localDate = LocalDate.parse(scanner.nextLine());
-                        System.out.println(habitsController.findAllUserHabitsByEmailAndDate(email, localDate));
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid date format");
-                    }
-                    break;
-                case 6:
-                    trackingTheFulfillmentOfHabits(main, scanner);
-                    break;
-                case 7:
-                    statisticsAndAnalyticsSearch(main, scanner);
-                    break;
-                default:
+            switch (getOption(scanner, "1. Create Habit\n2. Edit Habit\n3. Delete Habit\n4. View All Habits\n5. View Habits by Creation Date\n6. Track Habit Completion\n7. Statistics and Analytics\n8. Return back\nAny other key - Back\nChoose an option:")) {
+                case 1 -> createHabit(scanner, email);
+                case 2 -> updateHabit(scanner);
+                case 3 -> deleteHabit(scanner);
+                case 4 -> System.out.println(habitsController.findAllUserHabitsByEmail(email));
+                case 5 -> viewHabitsByDate(scanner, email);
+                case 6 -> trackHabitCompletion(scanner);
+                case 7 -> statisticsAndAnalytics(scanner);
+                case 8 -> {
                     return;
+                }
             }
         }
     }
 
-    private void trackingTheFulfillmentOfHabits(Main main, Scanner scanner) {
+    private void blockUser(Scanner scanner, String email) {
+        String emailBlock = prompt(scanner, "Enter the email to block: ");
+        System.out.println(administrationController.blockUser(email, emailBlock));
+    }
+
+    private void createHabit(Scanner scanner, String email) {
+        String name = prompt(scanner, "Enter habit name: ");
+        String description = prompt(scanner, "Enter habit description: ");
+        Frequency frequency = getFrequency(scanner);
+        if (frequency != null) {
+            System.out.println(habitsController.create(new Habit(null, name, description, frequency, email)));
+        }
+    }
+
+    private void updateHabit(Scanner scanner) {
+        Long id = getId(scanner);
+        String name = prompt(scanner, "Enter new habit name: ");
+        String description = prompt(scanner, "Enter new habit description: ");
+        System.out.println(habitsController.update(new Habit(id, name, description, null, null)));
+    }
+
+    private void deleteHabit(Scanner scanner) {
+        Long id = getId(scanner);
+        habitsController.delete(id);
+        System.out.println("Habit deleted!");
+    }
+
+    private void viewHabitsByDate(Scanner scanner, String email) {
+        LocalDate date = getDate(scanner, "Enter date (yyyy-MM-dd): ");
+        if (date != null) {
+            System.out.println(habitsController.findAllUserHabitsByEmailAndDate(email, date));
+        }
+    }
+
+    private void trackHabitCompletion(Scanner scanner) {
+        Long id = getId(scanner);
+        habitCompletionController.markCompletion(id);
+        System.out.println("Habit completion marked.");
+    }
+
+    private void statisticsAndAnalytics(Scanner scanner) {
         while (true) {
-            System.out.println("1. Отметить выполнение привычки\n2. История выполнения привычки\n3. Генерация статистики выполнения привычки за указанный период (день, неделя, месяц)\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    System.out.println("Enter habit id: ");
-                    main.habitCompletionController.markCompletion(scanner.nextLong());
-                    scanner.nextLine();
-                    break;
-                case 2:
-                    System.out.println("Enter habit id: ");
-                    System.out.println(main.habitCompletionController.showTheHistory(scanner.nextLong()));
-                    scanner.nextLine();
-                    break;
-                case 3:
-                    System.out.println("Enter habit id: ");
-                    Long id = scanner.nextLong();
-                    scanner.nextLine();
-                    System.out.println("Enter the period for generating habit statistics (choose one: day, week, or month):");
-                    System.out.println(main.habitCompletionController.getStatistics(id, scanner.nextLine()));
-                    break;
-                default:
+            switch (getOption(scanner, "1. Streak Count\n2. Completion Percentage\n3. Progress Report\nAny other key - Back\nChoose an option:")) {
+                case 1 -> calculateStreak(scanner);
+                case 2 -> calculateCompletionPercentage(scanner);
+                case 3 -> generateProgressReport(scanner);
+                case 4 -> {
                     return;
+                }
             }
         }
     }
 
-    private void statisticsAndAnalyticsSearch(Main main, Scanner scanner) {
-        while (true) {
-            System.out.println("1. Подсчет текущих серий выполнения привычек (streak)\n2. Процент успешного выполнения привычек за определенный период\n3. Формирование отчета для пользователя по прогрессу выполнения\nЛюбая другая кнопка - вернуться назад\nChoose an option: ");
-            int option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1:
-                    System.out.println("Enter habit id: ");
-                    System.out.println(main.habitCompletionController.calculateCurrentStreak(scanner.nextLong(), LocalDate.now()));
-                    scanner.nextLine();
-                    break;
-                case 2:
-                    System.out.println("Enter habit id: ");
-                    Long id = scanner.nextLong();
-                    scanner.nextLine();
-                    try {
-                        System.out.println("Введи дату начала в формате: \"yyyy-MM-dd\"");
-                        LocalDate localDateStart = LocalDate.parse(scanner.nextLine());
-                        System.out.println("Введи дату конца в формате: \"yyyy-MM-dd\"");
-                        LocalDate localDateEnd = LocalDate.parse(scanner.nextLine());
-                        System.out.println(main.habitCompletionController.calculateCompletionPercentage(id, localDateStart, localDateEnd));
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid date format");
-                    }
-                    break;
-                case 3:
-                    try {
-                        System.out.println("Enter habit id: ");
-                        Long generateReportId = scanner.nextLong();
-                        scanner.nextLine();
-                        System.out.println("Введи дату начала в формате: \"yyyy-MM-dd\"");
-                        LocalDate localDateStart = LocalDate.parse(scanner.nextLine());
-                        LocalDate localDateEnd = LocalDate.parse(scanner.nextLine());
-                        System.out.println(main.habitCompletionController.calculateCompletionPercentage(generateReportId, localDateStart, localDateEnd));
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid date format");
-                    }
-                    break;
-                default:
-                    return;
-            }
+    private void calculateStreak(Scanner scanner) {
+        Long id = getId(scanner);
+        System.out.println(habitCompletionController.calculateCurrentStreak(id, LocalDate.now()));
+    }
+
+    private void calculateCompletionPercentage(Scanner scanner) {
+        Long id = getId(scanner);
+        LocalDate startDate = getDate(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getDate(scanner, "Enter end date (yyyy-MM-dd): ");
+        if (startDate != null && endDate != null) {
+            System.out.println(habitCompletionController.calculateCompletionPercentage(id, startDate, endDate));
+        }
+    }
+
+    private void generateProgressReport(Scanner scanner) {
+        Long id = getId(scanner);
+        LocalDate startDate = getDate(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getDate(scanner, "Enter end date (yyyy-MM-dd): ");
+        if (startDate != null && endDate != null) {
+            System.out.println(habitCompletionController.generateHabitReport(id, startDate, endDate));
+        }
+    }
+
+    private Long getId(Scanner scanner) {
+        System.out.print("Enter habit id: ");
+        Long id = scanner.nextLong();
+        scanner.nextLine();
+        return id;
+    }
+
+    private LocalDate getDate(Scanner scanner, String message) {
+        try {
+            System.out.print(message);
+            return LocalDate.parse(scanner.nextLine());
+        } catch (Exception e) {
+            System.out.println("Invalid date format.");
+            return null;
+        }
+    }
+
+    private Frequency getFrequency(Scanner scanner) {
+        System.out.print("Enter habit frequency (daily/weekly): ");
+        try {
+            return Frequency.fromString(scanner.nextLine());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid frequency.");
+            return null;
         }
     }
 
