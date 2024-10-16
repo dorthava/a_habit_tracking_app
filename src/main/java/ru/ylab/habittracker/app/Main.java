@@ -1,9 +1,6 @@
 package ru.ylab.habittracker.app;
 
-import ru.ylab.habittracker.controllers.AuthenticationController;
-import ru.ylab.habittracker.controllers.HabitCompletionController;
-import ru.ylab.habittracker.controllers.HabitsController;
-import ru.ylab.habittracker.controllers.UsersController;
+import ru.ylab.habittracker.controllers.*;
 import ru.ylab.habittracker.dto.*;
 import ru.ylab.habittracker.models.Habit;
 import ru.ylab.habittracker.models.User;
@@ -19,6 +16,7 @@ public class Main {
     private final UsersController usersController;
     private final HabitsController habitsController;
     private final HabitCompletionController habitCompletionController;
+    private final AdministrationController administrationController;
 
     public Main() {
         UsersRepository usersRepository = new UsersRepositoryImpl();
@@ -34,17 +32,16 @@ public class Main {
         authenticationController = new AuthenticationController(authenticationService);
         habitsController = new HabitsController(habitsService);
         habitCompletionController = new HabitCompletionController(habitCompletionService);
+        administrationController = new AdministrationController(usersService);
     }
 
     public static void main(String[] args) {
         Main main = new Main();
         Scanner scanner = new Scanner(System.in);
+        main.createAdmin(main);
 
         while (true) {
-            System.out.println("1. Register");
-            System.out.println("2. Login");
-            System.out.println("3. Exit");
-            System.out.print("Choose an option: ");
+            System.out.print("1. Register\n2. Login\n3. Exit\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -102,11 +99,7 @@ public class Main {
 
     private void workingInsideAnAccount(Main main, Scanner scanner, String email) {
         while (true) {
-            System.out.println();
-            System.out.println("1. Управление пользователями");
-            System.out.println("2. Управление привычками");
-            System.out.println("Любая другая кнопка - выйти из аккаунта");
-            System.out.print("Choose an option: ");
+            System.out.println("1. Управление пользователями\n2. Управление привычками\n3. Заблокировать пользователя(Для администратора)\nЛюбая другая кнопка - выйти из аккаунта\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -118,6 +111,11 @@ public class Main {
                 case 2:
                     managingHabits(main, scanner, email);
                     break;
+                case 3:
+                    System.out.println("Введи email, который стоит заблокировать: ");
+                    String emailBlock = scanner.nextLine();
+                    System.out.println(main.administrationController.blockUser("admin@gmail.com", emailBlock));
+                    break;
                 default:
                     return;
             }
@@ -126,28 +124,20 @@ public class Main {
 
     private boolean userManagement(Main main, Scanner scanner, String email) {
         while (true) {
-            System.out.println();
-            System.out.println("1. Обновить пользовательские данные");
-            System.out.println("2. Обновить пароль");
-            System.out.println("3. Удалить аккаунт");
-            System.out.println("Любая другая кнопка - вернуться назад");
-            System.out.print("Choose an option: ");
+            System.out.println("1. Обновить пользовательские данные\n2. Обновить пароль\n3. Удалить аккаунт\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
                 case 1:
                     System.out.println("Enter name: ");
                     String name = scanner.nextLine();
-
                     System.out.println("Enter password: ");
                     String password = scanner.nextLine();
-
                     System.out.println(usersController.updatingTheUserProfile(new User(null, name, email, password)));
                     break;
                 case 2:
                     System.out.println("Enter password: ");
                     String forgotPassword = scanner.nextLine();
-
                     System.out.println(usersController.forgotPassword(email, forgotPassword));
                     break;
                 case 3:
@@ -162,26 +152,15 @@ public class Main {
 
     private void managingHabits(Main main, Scanner scanner, String email) {
         while (true) {
-            System.out.println();
-            System.out.println("1. Создание привычки");
-            System.out.println("2. Редактирование привычки");
-            System.out.println("3. Удаление привычки");
-            System.out.println("4. Просмотр всех привычек");
-            System.out.println("5. Просмотр всех привычек по дате создания");
-            System.out.println("6. Отслеживание выполнения привычки");
-            System.out.println("7. Статистика и аналитика");
-            System.out.println("Любая другая кнопка - вернуться назад");
-            System.out.print("Choose an option: ");
+            System.out.println("1. Создание привычки\n2. Редактирование привычки\n3. Удаление привычки\n4. Просмотр всех привычек\n5. Просмотр всех привычек по дате создания\n6. Отслеживание выполнения привычки\n7. Статистика и аналитика\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
                 case 1:
                     System.out.println("Enter habit name: ");
                     String name = scanner.nextLine();
-
                     System.out.println("Enter habit description: ");
                     String description = scanner.nextLine();
-
                     System.out.println("Enter habit frequency (daily/weekly):");
                     Frequency frequency;
                     try {
@@ -198,10 +177,8 @@ public class Main {
                     scanner.nextLine();
                     System.out.println("Enter habit name: ");
                     String updateName = scanner.nextLine();
-
                     System.out.println("Enter habit description: ");
                     String updateDescription = scanner.nextLine();
-
                     System.out.println(main.habitsController.update(new Habit(updateId, updateName, updateDescription, null, email)));
                     break;
                 case 3:
@@ -235,12 +212,7 @@ public class Main {
 
     private void trackingTheFulfillmentOfHabits(Main main, Scanner scanner) {
         while (true) {
-            System.out.println();
-            System.out.println("1. Отметить выполнение привычки");
-            System.out.println("2. История выполнения привычки");
-            System.out.println("3. Генерация статистики выполнения привычки за указанный период(день, неделя, месяц)");
-            System.out.println("Любая другая кнопка - вернуться назад");
-            System.out.print("Choose an option: ");
+            System.out.println("1. Отметить выполнение привычки\n2. История выполнения привычки\n3. Генерация статистики выполнения привычки за указанный период (день, неделя, месяц)\nЛюбая другая кнопка - вернуться назад\nChoose an option:");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -253,7 +225,6 @@ public class Main {
                     System.out.println("Enter habit id: ");
                     System.out.println(main.habitCompletionController.showTheHistory(scanner.nextLong()));
                     scanner.nextLine();
-
                     break;
                 case 3:
                     System.out.println("Enter habit id: ");
@@ -270,12 +241,7 @@ public class Main {
 
     private void statisticsAndAnalyticsSearch(Main main, Scanner scanner) {
         while (true) {
-            System.out.println();
-            System.out.println("1. Подсчет текущих серий выполнения привычек (streak)");
-            System.out.println("2. Процент успешного выполнения привычек за определенный период");
-            System.out.println("3. Формирование отчета для пользователя по прогрессу выполнения");
-            System.out.println("Любая другая кнопка - вернуться назад");
-            System.out.print("Choose an option: ");
+            System.out.println("1. Подсчет текущих серий выполнения привычек (streak)\n2. Процент успешного выполнения привычек за определенный период\n3. Формирование отчета для пользователя по прогрессу выполнения\nЛюбая другая кнопка - вернуться назад\nChoose an option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
@@ -315,5 +281,10 @@ public class Main {
                     return;
             }
         }
+    }
+
+    private void createAdmin(Main main) {
+        main.authenticationController.signUp(new SignUpRequest("admin", "admin@gmail.com", "admin"));
+        main.administrationController.setAdminRole("admin@gmail.com");
     }
 }

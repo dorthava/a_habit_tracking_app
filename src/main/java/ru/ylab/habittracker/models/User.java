@@ -1,5 +1,7 @@
 package ru.ylab.habittracker.models;
 
+import ru.ylab.habittracker.utils.Role;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +11,9 @@ public class User {
     private String name;
     private String email;
     private String password;
+    private Role role;
     private final List<Habit> habits;
+    private boolean isBlocked;
 
     public User(Long id, String name, String email, String password) {
         this.id = id;
@@ -17,6 +21,8 @@ public class User {
         this.email = email;
         this.password = password;
         habits = new ArrayList<>();
+        isBlocked = false;
+        role = Role.USER;
     }
 
     public Long getId() {
@@ -55,15 +61,20 @@ public class User {
         return habits;
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", habits=" + habits +
-                '}';
+    public boolean isBlocked() {
+        return isBlocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        isBlocked = blocked;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     @Override
@@ -71,11 +82,24 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(habits, user.habits);
+        return isBlocked == user.isBlocked && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && role == user.role && Objects.equals(habits, user.habits);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, email, password, habits);
+        return Objects.hash(id, name, email, password, role, habits, isBlocked);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", role=" + role +
+                ", habits=" + habits +
+                ", isBlocked=" + isBlocked +
+                '}';
     }
 }

@@ -4,6 +4,7 @@ import ru.ylab.habittracker.dto.BaseResponse;
 import ru.ylab.habittracker.models.User;
 import ru.ylab.habittracker.repositories.HabitsRepository;
 import ru.ylab.habittracker.repositories.UsersRepository;
+import ru.ylab.habittracker.utils.Role;
 
 import java.util.Optional;
 
@@ -47,4 +48,50 @@ public class UsersServiceImpl implements UsersService {
         user.setPassword(newPassword);
         return new BaseResponse<>(true, "Password updated", user);
     }
+
+    @Override
+    public BaseResponse<Void> blockUser(String adminEmail, String email) {
+        Optional<User> optionalAdmin = usersRepository.findByEmail(adminEmail);
+        if(optionalAdmin.isEmpty()) {
+            return new BaseResponse<>(false, "Admin not found", null);
+        }
+
+        if(optionalAdmin.get().getRole() == Role.USER) {
+            return new BaseResponse<>(false, "Forbidden", null);
+        }
+
+        Optional<User> optionalUser = usersRepository.findByEmail(email);
+        if(optionalUser.isEmpty()) {
+            return new BaseResponse<>(false, "User not found", null);
+        }
+
+        User user = optionalUser.get();
+        user.setBlocked(true);
+        return new BaseResponse<>(true, "User blocked", null);
+    }
+
+    @Override
+    public BaseResponse<Void> deleteUser(String adminEmail, String email) {
+        Optional<User> optionalAdmin = usersRepository.findByEmail(adminEmail);
+        if(optionalAdmin.isEmpty()) {
+            return new BaseResponse<>(false, "Admin not found", null);
+        }
+
+        if(optionalAdmin.get().getRole() == Role.USER) {
+            return new BaseResponse<>(false, "Forbidden", null);
+        }
+        usersRepository.delete(email);
+        return new BaseResponse<>(true, "User deleted", null);
+    }
+
+    @Override
+    public void setAdminRole(String email) {
+        Optional<User> optionalUser = usersRepository.findByEmail(email);
+        if(optionalUser.isEmpty()) {
+            return;
+        }
+        User user = optionalUser.get();
+        user.setRole(Role.ADMIN);
+    }
+
 }
