@@ -1,10 +1,7 @@
 package ru.ylab.habittracker.controllers;
 
-import ru.ylab.habittracker.dto.SignInRequest;
-import ru.ylab.habittracker.dto.SignInResponse;
-import ru.ylab.habittracker.dto.SignUpRequest;
-import ru.ylab.habittracker.dto.SignUpResponse;
-import ru.ylab.habittracker.services.AuthenticationService;
+import ru.ylab.habittracker.dto.*;
+import ru.ylab.habittracker.services.impl.AuthenticationService;
 
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
@@ -13,11 +10,23 @@ public class AuthenticationController {
         this.authenticationService = authenticationService;
     }
 
-    public SignUpResponse signUp(SignUpRequest signUpRequest) {
-        return authenticationService.signUp(signUpRequest);
+    public BaseResponse<UserResponse> signUp(SignUpRequest signUpRequest) {
+        BaseResponse<UserResponse> baseResponse;
+        try {
+            baseResponse = authenticationService.signUp(signUpRequest);
+        } catch (RuntimeException e) {
+            baseResponse = new BaseResponse<>(e.getMessage(), null);
+        }
+        return baseResponse;
     }
 
-    public SignInResponse signIn(SignInRequest signInRequest) {
-        return authenticationService.signIn(signInRequest);
+    public BaseResponse<UserResponse> signIn(SignInRequest signInRequest) {
+        BaseResponse<UserResponse> baseResponse;
+        try {
+            baseResponse = authenticationService.signIn(signInRequest);
+        } catch (RuntimeException e) {
+            baseResponse = new BaseResponse<>(e.getMessage(), null);
+        }
+        return baseResponse;
     }
 }

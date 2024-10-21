@@ -3,27 +3,23 @@ package ru.ylab.habittracker.models;
 import ru.ylab.habittracker.utils.Frequency;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Habit {
     private Long id;
     private String name;
     private String description;
-    private final Frequency frequency;
-    private final String createdBy;
+    private Frequency frequency;
+    private Long userId;
     private LocalDate createdDate;
-    private final List<HabitCompletion> completions;
 
-    public Habit(Long id, String name, String description, Frequency frequency, String createdBy) {
+    public Habit(Long id, String name, String description, Frequency frequency, Long userId, LocalDate createdDate) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.frequency = frequency;
-        this.createdBy = createdBy;
-        this.createdDate = LocalDate.now();
-        completions = new ArrayList<>();
+        this.userId = userId;
+        this.createdDate = createdDate;
     }
 
     public Long getId() {
@@ -50,8 +46,20 @@ public class Habit {
         this.description = description;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public Frequency getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(Frequency frequency) {
+        this.frequency = frequency;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public LocalDate getCreatedDate() {
@@ -62,24 +70,17 @@ public class Habit {
         this.createdDate = createdDate;
     }
 
-    public List<HabitCompletion> getCompletions() {
-        return completions;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Habit habit = (Habit) o;
-        return Objects.equals(id, habit.id) && Objects.equals(name, habit.name) && Objects.equals(description, habit.description)
-                && frequency == habit.frequency && Objects.equals(createdBy, habit.createdBy)
-                && Objects.equals(createdDate, habit.createdDate)
-                && Objects.equals(completions, habit.completions);
+        return Objects.equals(id, habit.id) && Objects.equals(name, habit.name) && Objects.equals(description, habit.description) && frequency == habit.frequency && Objects.equals(userId, habit.userId) && Objects.equals(createdDate, habit.createdDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, frequency, createdBy, createdDate, completions);
+        return Objects.hash(id, name, description, frequency, userId, createdDate);
     }
 
     @Override
@@ -89,9 +90,8 @@ public class Habit {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", frequency=" + frequency +
-                ", createdBy='" + createdBy + '\'' +
+                ", userId=" + userId +
                 ", createdDate=" + createdDate +
-                ", completions=" + completions +
                 '}';
     }
 }

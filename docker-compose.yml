@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: habit_tracking
+    environment:
+      POSTGRES_USER: custom_user
+      POSTGRES_PASSWORD: custom_password
+      POSTGRES_DB: habit_tracking
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  postgres_data:

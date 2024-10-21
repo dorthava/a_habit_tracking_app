@@ -1,26 +1,36 @@
 package ru.ylab.habittracker.utils;
 
+/**
+ * Перечисление частоты выполнения действий с соответствующими числовыми значениями.
+ */
 public enum Frequency {
-    DAILY("daily"),
-    WEEKLY("weekly");
+    DAILY(0),
+    WEEKLY(1);
 
-    private final String label;
+    private final int value;
 
-    Frequency(String label) {
-        this.label = label;
+    /**
+     * Конструктор для установки числового значения частоты.
+     *
+     * @param value числовое значение частоты
+     */
+    Frequency(int value) {
+        this.value = value;
     }
 
-    public static Frequency fromString(String label) {
-        for (Frequency frequency : Frequency.values()) {
-            if (frequency.label.equalsIgnoreCase(label)) {
+    /**
+     * Возвращает частоту, соответствующую переданному значению.
+     *
+     * @param value числовое значение частоты
+     * @return соответствующая частота
+     * @throws IllegalArgumentException если значение не соответствует ни одной частоте
+     */
+    public static Frequency fromValue(int value) {
+        for (Frequency frequency : values()) {
+            if (frequency.value == value) {
                 return frequency;
             }
         }
-        throw new IllegalArgumentException("Unknown frequency: " + label);
-    }
-
-    @Override
-    public String toString() {
-        return label;
+        throw new IllegalArgumentException("Unknown value: " + value);
     }
 }

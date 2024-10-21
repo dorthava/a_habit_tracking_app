@@ -1,15 +1,8 @@
 # a_habit_tracking_app
 * Запуск консольного приложения в терминале:
+1) docker-compose up -d
+2) mvn clean build
+3) java -jar target/a_habit_tracking_app-1.0-SNAPSHOT.jar
 
-mvn clean build
-java -jar target/a_habit_tracking_app-1.0-SNAPSHOT.jar
-
-* Запуск тестов: 
-
-mvn clean test
-
-
-https://github.com/dorthava/a_habit_tracking_app/pull/5
-https://github.com/dorthava/a_habit_tracking_app/pull/6
-
-![img.png](screens/img.png)
+* Запуск тестов:
+1) mvn clean test

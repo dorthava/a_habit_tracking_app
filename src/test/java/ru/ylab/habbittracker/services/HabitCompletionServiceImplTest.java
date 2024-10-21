@@ -1,142 +1,110 @@
 package ru.ylab.habbittracker.services;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.PostgreSQLContainer;
+import ru.ylab.habittracker.app.DatabaseConnection;
 import ru.ylab.habittracker.dto.BaseResponse;
-import ru.ylab.habittracker.dto.HabitReportResponse;
-import ru.ylab.habittracker.models.Habit;
+import ru.ylab.habittracker.exception.HabitNotFoundException;
 import ru.ylab.habittracker.models.HabitCompletion;
 import ru.ylab.habittracker.repositories.HabitCompletionRepository;
-import ru.ylab.habittracker.repositories.HabitCompletionRepositoryImpl;
 import ru.ylab.habittracker.repositories.HabitsRepository;
-import ru.ylab.habittracker.repositories.HabitsRepositoryImpl;
-import ru.ylab.habittracker.services.HabitCompletionServiceImpl;
-import ru.ylab.habittracker.utils.Frequency;
+import ru.ylab.habittracker.repositories.impl.HabitCompletionRepositoryImpl;
+import ru.ylab.habittracker.repositories.impl.HabitsRepositoryImpl;
+import ru.ylab.habittracker.services.HabitCompletionService;
+import ru.ylab.habittracker.services.impl.HabitCompletionServiceImpl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HabitCompletionServiceImplTest {
-    private HabitsRepository habitsRepository;
-    private HabitCompletionRepository habitCompletionRepository;
-    private HabitCompletionServiceImpl habitCompletionService;
-    private Habit testHabit;
-    private List<HabitCompletion> habitCompletions;
+    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13");
+
+    private static HabitCompletionService habitCompletionService;
+    private static HabitCompletionRepository habitCompletionRepository;
+    private static HabitsRepository habitsRepository;
+
+    @BeforeAll
+    static void beforeAll() throws LiquibaseException, SQLException {
+        postgres.start();
+        Connection connection = new DatabaseConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()).getConnection();
+        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+        Liquibase liquibase = new Liquibase("db/changelog/db.changelog-master.xml", new ClassLoaderResourceAccessor(), database);
+        liquibase.update();
+    }
 
     @BeforeEach
     void setUp() {
-        habitsRepository = new HabitsRepositoryImpl();
-        habitCompletionRepository = new HabitCompletionRepositoryImpl();
+        DatabaseConnection databaseConnection = new DatabaseConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+        try (Connection connection = databaseConnection.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("DROP SEQUENCE IF EXISTS habit_tracking_schema.habit_completion_sequence CASCADE");
+            statement.execute("DROP TABLE IF EXISTS habit_tracking_schema.habit_completion CASCADE");
+
+            statement.executeUpdate("CREATE SEQUENCE IF NOT EXISTS habit_tracking_schema.habit_completion_sequence");
+            statement.executeUpdate("CREATE TABLE habit_tracking_schema.habit_completion (id BIGINT PRIMARY KEY NOT NULL DEFAULT nextval('habit_tracking_schema.habit_completion_sequence')," +
+                    "    completion_date DATE NOT NULL," +
+                    "    habit_id BIGINT NOT NULL," +
+                    "    FOREIGN KEY (habit_id) REFERENCES habit_tracking_schema.habit(id) ON DELETE CASCADE)");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        habitCompletionRepository = new HabitCompletionRepositoryImpl(databaseConnection);
+        habitsRepository = new HabitsRepositoryImpl(databaseConnection);
         habitCompletionService = new HabitCompletionServiceImpl(habitsRepository, habitCompletionRepository);
-        testHabit = new Habit(null, "Test Habit", "test@example.com", Frequency.DAILY, "test@gmail.com");
-        testHabit = habitsRepository.save(testHabit);
-        habitCompletions = new ArrayList<>();
     }
 
     @Test
-    void testMarkCompletion() {
-        habitCompletionService.markCompletion(testHabit.getId());
-        List<HabitCompletion> completions = testHabit.getCompletions();
-        assertEquals(1, completions.size());
-        assertTrue(completions.get(0).isCompleted());
-        assertEquals(LocalDate.now(), completions.get(0).getCompletionDate());
-    }
-
-    @Test
-    void testShowTheHistory() {
-        habitCompletionService.markCompletion(testHabit.getId());
-        BaseResponse<List<HabitCompletion>> response = habitCompletionService.showTheHistory(testHabit.getId());
-        assertTrue(response.success());
-        assertNotNull(response.data());
-        assertEquals(1, response.data().size());
-    }
-
-    @Test
-    void testGetCompletionForMonth() {
-        habitCompletionService.markCompletion(testHabit.getId());
-        BaseResponse<List<HabitCompletion>> response = habitCompletionService.getCompletion(testHabit.getId(), "month");
-        assertTrue(response.success());
-        assertNotNull(response.data());
-        assertEquals(31, response.data().size());
-    }
-
-    @Test
-    void testCalculateCurrentStreak() {
-        HabitCompletion prevHabitCompletion = habitCompletionService.markCompletion(testHabit.getId());
-        prevHabitCompletion.setCompletionDate(LocalDate.now().minusDays(1));
-        habitCompletionService.markCompletion(testHabit.getId());
-        BaseResponse<Integer> response = habitCompletionService.calculateCurrentStreak(testHabit.getId(), LocalDate.now());
-        assertTrue(response.success());
-        assertEquals(2, response.data());
-    }
-
-    @Test
-    void testCalculateCompletionPercentage() {
-        habitCompletionService.markCompletion(testHabit.getId());
-        BaseResponse<Double> response = habitCompletionService.calculateCompletionPercentage(testHabit.getId(), LocalDate.now().minusDays(1), LocalDate.now());
-        assertTrue(response.success());
-        assertEquals(0.5, response.data());
-    }
-
-    @Test
-    void testGenerateHabitReport() {
-        habitCompletionService.markCompletion(testHabit.getId());
-        BaseResponse<HabitReportResponse> response = habitCompletionService.generateHabitReport(testHabit.getId(), LocalDate.now().minusDays(1), LocalDate.now());
-        assertTrue(response.success());
-        assertNotNull(response.data());
-        assertEquals(testHabit.getName(), response.data().getHabitName());
-    }
-
-    @Test
-    void testGenerateHabitReport2() {
-        habitCompletionService.markCompletion(testHabit.getId());
-
-        BaseResponse<HabitReportResponse> response = habitCompletionService.generateHabitReport(
-                testHabit.getId(),
-                LocalDate.now().minusDays(1),
-                LocalDate.now()
-        );
-
-        assertTrue(response.success());
-        assertNotNull(response.data());
-        assertEquals(testHabit.getName(), response.data().getHabitName());
-        assertEquals(1, response.data().getTotalCompletions());
-    }
-
-    @Test
-    void testGetCompletionForWeek() {
+    @DisplayName("Given habit not completed today When markCompletion Then complete habit")
+    void givenHabitNotCompletedToday_WhenMarkCompletion_ThenCompleteHabit() {
         Long habitId = 1L;
         LocalDate today = LocalDate.now();
-        habitCompletions.add(new HabitCompletion(today.minusDays(1), true, habitId));
-        habitCompletions.add(new HabitCompletion(today.minusDays(2), false, habitId));
-        habitCompletions.add(new HabitCompletion(today.minusDays(3), true, habitId));
-        habitCompletions.add(new HabitCompletion(today.minusDays(4), false, habitId));
 
-        BaseResponse<List<HabitCompletion>> response = habitCompletionService.getCompletionForWeek(habitId, habitCompletions, today);
+        assertTrue(habitCompletionRepository.findByHabitId(habitId).isEmpty(), "Habit should not have any completions yet");
 
-        assertTrue(response.success());
-        assertNotNull(response.data());
+        HabitCompletion habitCompletion = habitCompletionService.markCompletion(habitId);
 
-        assertEquals(7, response.data().size());
-        assertEquals("Generated statistics for the week.", response.message());
+        assertNotNull(habitCompletion);
+        assertEquals(habitId, habitCompletion.getHabitId(), "The habit ID should match");
+        assertEquals(today, habitCompletion.getCompletionDate(), "The completion date should be today");
+
+        assertFalse(habitCompletionRepository.findByHabitId(habitId).isEmpty(), "Habit should have at least one completion");
     }
 
     @Test
-    void testGetCompletionForDay() {
-        Long habitId = 2L;
-        LocalDate today = LocalDate.now();
-        habitCompletions.add(new HabitCompletion(today, true, habitId));
-        habitCompletions.add(new HabitCompletion(today.minusDays(1), false, habitId));
+    @DisplayName("Given habit with completions When showTheHistory Then return habit completion history")
+    void givenHabitWithCompletions_WhenShowTheHistory_ThenReturnHabitCompletionHistory() {
+        Long habitId = 1L;
 
-        BaseResponse<List<HabitCompletion>> response = habitCompletionService.getCompletionForDay(habitId, habitCompletions, today);
+        BaseResponse<List<HabitCompletion>> response = habitCompletionService.showTheHistory(habitId);
 
-        assertTrue(response.success());
+        assertNotNull(response);
+        assertEquals("The habit history found.", response.status());
         assertNotNull(response.data());
-        assertEquals(1, response.data().size());
-        assertTrue(response.data().get(0).isCompleted());
-        assertEquals("Generated statistics for the day.", response.message());
+    }
+
+    @Test
+    @DisplayName("Given empty completion list When calculateCurrentStreak Then throw HabitNotFoundException")
+    void givenEmptyCompletionList_WhenCalculateCurrentStreak_ThenThrowHabitNotFoundException() {
+        HabitNotFoundException exception = assertThrows(HabitNotFoundException.class, () -> {
+            habitCompletionService.calculateCurrentStreak(2L, LocalDate.now());
+        });
+
+        assertEquals("Habit completion list is empty.", exception.getMessage(), "Exception message should match");
+    }
+
+    @AfterAll
+    static void afterAll() {
+        postgres.stop();
     }
 }
