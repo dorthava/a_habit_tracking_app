@@ -1,25 +1,16 @@
 package ru.ylab.habittracker.models;
 
-import ru.ylab.habittracker.utils.IdsGenerator;
-
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class HabitCompletion {
     private Long id;
     private LocalDate completionDate;
-    private boolean completed;
     private Long habitId;
 
-    public HabitCompletion(LocalDate completionDate, Long habitId) {
+    public HabitCompletion(Long id, LocalDate completionDate, Long habitId) {
+        this.id = id;
         this.completionDate = completionDate;
-        this.habitId = habitId;
-    }
-
-    public HabitCompletion(LocalDate completionDate, boolean completed, Long habitId) {
-        this.id = IdsGenerator.getInstance().generateId();
-        this.completionDate = completionDate;
-        this.completed = completed;
         this.habitId = habitId;
     }
 
@@ -39,17 +30,25 @@ public class HabitCompletion {
         this.completionDate = completionDate;
     }
 
-    public boolean isCompleted() {
-        return completed;
+    public Long getHabitId() {
+        return habitId;
     }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    public void setHabitId(Long habitId) {
+        this.habitId = habitId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HabitCompletion that = (HabitCompletion) o;
+        return Objects.equals(id, that.id) && Objects.equals(completionDate, that.completionDate) && Objects.equals(habitId, that.habitId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, completionDate, completed, habitId);
+        return Objects.hash(id, completionDate, habitId);
     }
 
     @Override
@@ -57,7 +56,6 @@ public class HabitCompletion {
         return "HabitCompletion{" +
                 "id=" + id +
                 ", completionDate=" + completionDate +
-                ", completed=" + completed +
                 ", habitId=" + habitId +
                 '}';
     }

@@ -1,117 +1,181 @@
 package ru.ylab.habbittracker.repositories;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import ru.ylab.habittracker.models.User;
-import ru.ylab.habittracker.repositories.UsersRepositoryImpl;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.PostgreSQLContainer;
+import ru.ylab.habittracker.app.DatabaseConnection;
+import ru.ylab.habittracker.models.Users;
+import ru.ylab.habittracker.repositories.UsersRepository;
+import ru.ylab.habittracker.repositories.impl.UsersRepositoryImpl;
+import ru.ylab.habittracker.utils.Role;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UsersRepositoryImplTest {
-    private static UsersRepositoryImpl usersRepository;
+class UsersRepositoryImplTest {
+    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13");
+
+    private static UsersRepository usersRepository;
 
     @BeforeAll
-    static void setUp() {
-        usersRepository = new UsersRepositoryImpl();
+    public static void beforeAll() throws LiquibaseException, SQLException {
+        postgres.start();
+        Connection connection = new DatabaseConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()).getConnection();
+        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+        Liquibase liquibase = new Liquibase("db/changelog/db.changelog-master.xml", new ClassLoaderResourceAccessor(), database);
+        liquibase.update();
+    }
+
+    @BeforeEach
+    void setUp() {
+        DatabaseConnection databaseConnection = new DatabaseConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+        try (Connection connection = databaseConnection.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("DROP SEQUENCE IF EXISTS habit_tracking_schema.users_sequence CASCADE");
+            statement.execute("DROP TABLE IF EXISTS habit_tracking_schema.users CASCADE");
+
+            statement.executeUpdate("CREATE SEQUENCE IF NOT EXISTS habit_tracking_schema.users_sequence");
+            statement.executeUpdate("CREATE TABLE habit_tracking_schema.users ("
+                    + "id BIGINT PRIMARY KEY DEFAULT nextval('habit_tracking_schema.users_sequence'), " +
+                    "    name VARCHAR(64) NOT NULL UNIQUE, " +
+                    "    email VARCHAR(64) NOT NULL UNIQUE, " +
+                    "    password VARCHAR(64) NOT NULL, " +
+                    "    role INT NOT NULL," +
+                    "    is_blocked BOOLEAN NOT NULL)");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        usersRepository = new UsersRepositoryImpl(databaseConnection);
     }
 
     @Test
-    void testSaveUser() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-
-        User savedUser = usersRepository.save(user);
-
-        assertNotNull(savedUser.getId(), "ID should be generated");
-        assertEquals("test@example.com", savedUser.getEmail());
-        assertEquals("Test User", savedUser.getName());
-        assertEquals("password", savedUser.getPassword());
-    }
-
-    @Test
-    void testFindByEmailUserExists() {
-        User user = new User(null, "Test User", "test@example.com", "password");
+    void givenExistingUser_WhenFindByEMail_ThenUserIsReturned() {
+        Users user = new Users(null, "testuser1", "test1@example.com", "password", Role.USER, false);
         usersRepository.save(user);
 
-        Optional<User> foundUser = usersRepository.findByEmail("test@example.com");
-
-        assertTrue(foundUser.isPresent(), "User should be found");
-        assertEquals("Test User", foundUser.get().getName());
+        Optional<Users> foundUser = usersRepository.findByEmail("test1@example.com");
+        assertTrue(foundUser.isPresent());
+        assertEquals("testuser1", foundUser.get().getName());
     }
 
     @Test
-    void testFindByEmailUserDoesNotExist() {
-        Optional<User> foundUser = usersRepository.findByEmail("nonexistent@example.com");
-
-        assertFalse(foundUser.isPresent(), "User should not be found");
+    void givenExistingUser_WhenFindByEmail_ThenEmptyIsReturned() {
+        Optional<Users> foundUser = usersRepository.findByEmail("nonexistent@example.com");
+        assertFalse(foundUser.isPresent());
     }
 
     @Test
-    void testUpdateUser() {
-        User user = new User(null, "Test User", "test@example.com", "password");
+    void givenExistingUser_WhenFindById_ThenUserIsReturned() {
+        Users user = new Users(null, "testuser2", "test2@example.com", "password", Role.USER, false);
         usersRepository.save(user);
 
-        User updatedUser = new User(null, "Updated User", "test@example.com", "newpassword");
-        User result = usersRepository.update(updatedUser);
-
-        assertEquals("Updated User", result.getName());
-        assertEquals("newpassword", result.getPassword());
+        Optional<Users> foundUser = usersRepository.findById(1L);
+        assertTrue(foundUser.isPresent());
+        assertEquals("testuser2", foundUser.get().getName());
     }
 
     @Test
-    public void testUpdateWithEmptyNameShouldNotUpdateName() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-        usersRepository.save(user);
-
-        User updatedUser = new User(null, "", "test@example.com", "newpassword123");
-
-        User result = usersRepository.update(updatedUser);
-
-        assertEquals(result.getName(), "Test User");
-        assertEquals(result.getPassword(), "newpassword123");
+    void givenNonExistingUser_WhenFindById_ThenEmptyIsReturned() {
+        Optional<Users> foundUser = usersRepository.findById(999L);
+        assertFalse(foundUser.isPresent());
     }
 
     @Test
-    void testDeleteUserById() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-        User savedUser = usersRepository.save(user);
+    void givenNoUsers_WhenFindAll_ThenEmptyListIsReturned() {
+        List<Users> users = usersRepository.findAll();
+        assertTrue(users.isEmpty(), "Expected an empty list of users");
+    }
+
+    @Test
+    void givenMultipleUsers_WhenFindAll_ThenAllUsersAreReturned() {
+        Users user1 = new Users(null, "User One", "user1@example.com", "password1", Role.USER, false);
+        Users user2 = new Users(null, "User Two", "user2@example.com", "password2", Role.USER, false);
+        usersRepository.save(user1);
+        usersRepository.save(user2);
+
+        List<Users> users = usersRepository.findAll();
+        assertEquals(2, users.size(), "Expected two users to be returned");
+        assertTrue(users.stream().anyMatch(u -> "User One".equals(u.getName())), "Expected User One to be in the list");
+        assertTrue(users.stream().anyMatch(u -> "User Two".equals(u.getName())), "Expected User Two to be in the list");
+    }
+
+    @Test
+    void givenValidUser_WhenSaved_ThenUserIsReturnedWithId() {
+        Users user = new Users(null, "Valid User", "valid@example.com", "password", Role.USER, false);
+
+        Users savedUser = usersRepository.save(user);
+
+        assertNotNull(savedUser);
+        assertNotNull(savedUser.getId());
+        assertEquals("Valid User", savedUser.getName());
+        assertEquals("valid@example.com", savedUser.getEmail());
+    }
+
+    @Test
+    void givenUserWithExistingEmail_WhenSaved_ThenReturnNull() {
+        Users user1 = new Users(null, "User1", "duplicate@example.com", "password1", Role.USER, false);
+        usersRepository.save(user1);
+
+        Users user2 = new Users(null, "User2", "duplicate@example.com", "password2", Role.USER, false);
+        Users savedUser = usersRepository.save(user2);
+
+        assertNull(savedUser);
+    }
+
+    @Test
+    void givenExistingUser_WhenUpdated_ThenUserIsUpdated() {
+        Users user = new Users(null, "Original User", "original@example.com", "password", Role.USER, false);
+        Users savedUser = usersRepository.save(user);
+
+        savedUser.setName("Updated User");
+        savedUser.setEmail("updated@example.com");
+        savedUser.setPassword("newpassword");
+        savedUser.setBlocked(true);
+
+        Users updatedUser = usersRepository.update(savedUser);
+
+        assertNotNull(updatedUser);
+        assertEquals(savedUser.getId(), updatedUser.getId());
+        assertEquals("Updated User", updatedUser.getName());
+        assertEquals("updated@example.com", updatedUser.getEmail());
+        assertTrue(updatedUser.isBlocked());
+    }
+
+    @Test
+    void givenNonExistingUser_WhenUpdated_ThenReturnNull() {
+        Users user = new Users(999L, "Non-Existing User", "nonexisting@example.com", "password", Role.USER, false);
+        Users updatedUser = usersRepository.update(user);
+        assertNull(updatedUser);
+    }
+
+    @Test
+    void givenExistingUser_WhenDeleted_ThenUserDoesNotExist() {
+        Users user = new Users(null, "User to Delete", "delete@example.com", "password", Role.USER, false);
+        Users savedUser = usersRepository.save(user);
 
         usersRepository.delete(savedUser.getId());
 
-        assertFalse(usersRepository.existsByEmail("test@example.com"), "User should be deleted");
+        Optional<Users> foundUser = usersRepository.findById(savedUser.getId());
+        assertFalse(foundUser.isPresent());
     }
 
     @Test
-    void testDeleteUserByEmail() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-        usersRepository.save(user);
-
-        usersRepository.delete("test@example.com");
-
-        assertFalse(usersRepository.existsByEmail("test@example.com"), "User should be deleted by email");
+    void givenNonExistingUser_WhenDeleted_ThenNoExceptionIsThrown() {
+        assertDoesNotThrow(() -> usersRepository.delete(999L));
     }
 
-    @Test
-    void testExistsByEmail() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-        usersRepository.save(user);
-
-        assertTrue(usersRepository.existsByEmail("test@example.com"), "User should exist");
-        assertFalse(usersRepository.existsByEmail("nonexistent@example.com"), "User should not exist");
-    }
-
-    @Test
-    void testFindAll() {
-        User user = new User(null, "Test User", "test@example.com", "password");
-        usersRepository.save(user);
-
-        User user2 = new User(null, "Test User2", "test2@example.com", "password");
-        usersRepository.save(user2);
-
-        List<User> users = usersRepository.findAll();
-        assertEquals(users.get(0), user);
-        assertEquals(users.get(1), user2);
+    @AfterAll
+    static void afterAll() {
+        postgres.stop();
     }
 }

@@ -10,12 +10,20 @@ public class AdministrationController {
         this.usersService = usersService;
     }
 
-    public BaseResponse<Void> blockUser(String adminEmail, String email) {
-        return usersService.blockUser(adminEmail, email);
+    public BaseResponse<Void> blockUser(Long adminId, Long userId) {
+        try {
+            return usersService.blockUser(adminId, userId);
+        } catch (Exception e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 
-    public BaseResponse<Void> deleteUser(String adminEmail, String email) {
-        return usersService.deleteUser(adminEmail, email);
+    public BaseResponse<Void> deleteUser(Long adminId, Long userId) {
+        try {
+            return usersService.deleteUserByAdmin(adminId, userId);
+        } catch (Exception e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 
     public void setAdminRole(String email) {

@@ -1,7 +1,8 @@
 package ru.ylab.habittracker.controllers;
 
 import ru.ylab.habittracker.dto.BaseResponse;
-import ru.ylab.habittracker.models.User;
+import ru.ylab.habittracker.dto.UpdateUserProfileRequest;
+import ru.ylab.habittracker.dto.UserResponse;
 import ru.ylab.habittracker.services.UsersService;
 
 public class UsersController {
@@ -11,15 +12,17 @@ public class UsersController {
         this.usersService = usersService;
     }
 
-    public BaseResponse<User> updatingTheUserProfile(User user) {
-        return usersService.update(user);
+    public BaseResponse<UserResponse> updatingTheUserProfile(UpdateUserProfileRequest updateUserProfileRequest) {
+        BaseResponse<UserResponse> result;
+        try {
+            result = usersService.update(updateUserProfileRequest);
+        } catch (RuntimeException e) {
+            result = new BaseResponse<>(e.getMessage(), null);
+        }
+        return result;
     }
 
-    public void deleteUserByEmail(String email) {
-        usersService.delete(email);
-    }
-
-    public BaseResponse<User> forgotPassword(String email, String password) {
-        return usersService.updatePasswordByEmail(email, password);
+    public void deleteUserById(Long id) {
+        usersService.delete(id);
     }
 }

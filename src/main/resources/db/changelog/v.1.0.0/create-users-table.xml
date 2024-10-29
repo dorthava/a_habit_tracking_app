@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="create-users-table" author="dorthava">
+        <createSequence sequenceName="users_sequence" schemaName="habit_tracking_schema"/>
+
+        <createTable tableName="users" schemaName="habit_tracking_schema">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="password" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="role" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="is_blocked" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-default-id-value" author="dorthava">
+        <addDefaultValue
+                tableName="users"
+                columnName="id"
+                defaultValueComputed="nextval('habit_tracking_schema.users_sequence')"
+                schemaName="habit_tracking_schema"/>
+    </changeSet>
+
+    <changeSet id="insert-into-users-admin" author="dorthava">
+        <insert tableName="users" schemaName="habit_tracking_schema">
+            <column name="id" valueComputed="nextval('habit_tracking_schema.users_sequence')"/>
+            <column name="name" value="John Doe"/>
+            <column name="email" value="johndoe@example.com"/>
+            <column name="password" value="securepassword123"/>
+            <column name="role" value="1"/>
+            <column name="is_blocked" value="false"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

@@ -15,22 +15,38 @@ public class HabitsController {
     }
 
     public BaseResponse<Habit> create(Habit habit) {
-        return habitsService.create(habit);
+        try {
+            return habitsService.create(habit);
+        } catch (RuntimeException e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 
     public BaseResponse<Habit> update(Habit habit) {
-        return habitsService.update(habit);
+        try {
+            return habitsService.update(habit);
+        } catch (RuntimeException e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 
     public void delete(Long id) {
         habitsService.delete(id);
     }
 
-    public BaseResponse<List<Habit>> findAllUserHabitsByEmail(String email) {
-        return habitsService.findByEmail(email);
+    public BaseResponse<List<Habit>> findAllUserHabitsById(Long userId) {
+        try {
+            return habitsService.findByUserId(userId);
+        } catch (RuntimeException e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 
-    public BaseResponse<List<Habit>> findAllUserHabitsByEmailAndDate(String email, LocalDate date) {
-        return habitsService.findByEmailAndDate(email, date);
+    public BaseResponse<List<Habit>> findAllUserHabitsByUserIdAndDate(Long userId, LocalDate date) {
+        try {
+            return habitsService.findByUserIdAndDate(userId, date);
+        } catch (RuntimeException e) {
+            return new BaseResponse<>(e.getMessage(), null);
+        }
     }
 }
